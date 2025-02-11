@@ -3,6 +3,8 @@ package routes
 import (
 	"context"
 	"github.com/go-chi/chi"
+	"github.com/mrkucher83/avito-shop/internal/handlers/employee"
+	"github.com/mrkucher83/avito-shop/internal/service"
 	"github.com/mrkucher83/avito-shop/pkg/logger"
 	"net/http"
 	"os"
@@ -11,13 +13,22 @@ import (
 	"time"
 )
 
-func Start(port string) {
+type Router struct {
+	services *service.Service
+}
+
+func (rt *Router) Start(port string) {
 	r := chi.NewRouter()
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		if _, err := w.Write([]byte("Welcome to Avito Shop!")); err != nil {
 			logger.Warn("failed to write response: ", err)
 		}
+	})
+
+	r.Route("/api/auth", func(r chi.Router) {
+		r.Get("/sign-up", employee.SignUp)
+		r.Get("/sign-in", employee.SignIn)
 	})
 
 	logger.Info("starting server on %s", port)
