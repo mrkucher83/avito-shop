@@ -1,9 +1,10 @@
 -- +goose Up
 -- +goose StatementBegin
-CREATE TABLE IF NOT EXISTS employee (
-    id      BIGSERIAL PRIMARY KEY,
-    name    VARCHAR(255) NOT NULL,
-    coins   INT NOT NULL DEFAULT 1000
+CREATE TABLE employee (
+                          id BIGSERIAL PRIMARY KEY,
+                          username VARCHAR(255) NOT NULL,
+                          password VARCHAR(255) NOT NULL,
+                          coins INT NOT NULL DEFAULT 1000
 );
 
 CREATE INDEX IF NOT EXISTS idx_employee_id ON employee(id);

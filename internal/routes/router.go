@@ -3,8 +3,8 @@ package routes
 import (
 	"context"
 	"github.com/go-chi/chi"
-	"github.com/mrkucher83/avito-shop/internal/handlers/employee"
-	"github.com/mrkucher83/avito-shop/internal/service"
+	"github.com/mrkucher83/avito-shop/internal/godb"
+	"github.com/mrkucher83/avito-shop/internal/handlers"
 	"github.com/mrkucher83/avito-shop/pkg/logger"
 	"net/http"
 	"os"
@@ -13,11 +13,9 @@ import (
 	"time"
 )
 
-type Router struct {
-	services *service.Service
-}
+func Start(port string, repo *godb.Instance) {
+	handler := handlers.NewRepo(repo)
 
-func (rt *Router) Start(port string) {
 	r := chi.NewRouter()
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
@@ -26,10 +24,7 @@ func (rt *Router) Start(port string) {
 		}
 	})
 
-	r.Route("/api/auth", func(r chi.Router) {
-		r.Get("/sign-up", employee.SignUp)
-		r.Get("/sign-in", employee.SignIn)
-	})
+	r.Post("/api/auth", handler.SignUp)
 
 	logger.Info("starting server on %s", port)
 	server := &http.Server{Addr: ":" + port, Handler: r}

@@ -23,7 +23,5 @@ func main() {
 	}
 	defer repo.Close()
 
-	//routes.Start(port)
-	srv := new(routes.Router)
-	srv.Start(port)
+	routes.Start(port, repo)
 }
