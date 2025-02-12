@@ -7,10 +7,12 @@ import (
 	"github.com/mrkucher83/avito-shop/internal/models"
 	"github.com/mrkucher83/avito-shop/pkg/helpers/hasher"
 	"net/http"
+	"os"
+	"strings"
 	"time"
 )
 
-var jwtSecret = []byte("avito_secret_key")
+var jwtSecret = []byte(os.Getenv("AVITO_SECRET"))
 
 type Claims struct {
 	Username string `json:"username"`
@@ -18,6 +20,22 @@ type Claims struct {
 }
 
 func (rp *Repo) SignUp(w http.ResponseWriter, r *http.Request) {
+	// Check if there is JWT from request Header
+	tokenHeader := r.Header.Get("Authorization")
+	if tokenHeader != "" {
+		parts := strings.Split(tokenHeader, " ")
+		if len(parts) == 2 && parts[0] == "Bearer" {
+			claims, err := ValidateToken(parts[1])
+			if err == nil && claims.ExpiresAt > time.Now().Unix() {
+				w.Header().Set("Content-Type", "application/json")
+				if err = json.NewEncoder(w).Encode(models.AuthResponse{Token: parts[1]}); err != nil {
+					http.Error(w, "Error encoding response: "+err.Error(), http.StatusInternalServerError)
+					return
+				}
+				return
+			}
+		}
+	}
 	var req models.AuthRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
@@ -64,16 +82,7 @@ func (rp *Repo) SignUp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Generate JWT token
-	expirationTime := time.Now().Add(24 * time.Hour)
-	claims := &Claims{
-		Username: req.Username,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: expirationTime.Unix(),
-			Id:        uuid.New().String(),
-		},
-	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString(jwtSecret)
+	tokenString, err := GenerateToken(req.Username)
 	if err != nil {
 		http.Error(w, "Error generating token", http.StatusInternalServerError)
 		return
@@ -84,4 +93,30 @@ func (rp *Repo) SignUp(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error encoding response: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
+}
+
+func GenerateToken(username string) (string, error) {
+	expirationTime := time.Now().Add(24 * time.Hour)
+	claims := &Claims{
+		Username: username,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: expirationTime.Unix(),
+			Id:        uuid.New().String(),
+		},
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString(jwtSecret)
+}
+
+func ValidateToken(tokenString string) (*Claims, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+		return jwtSecret, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	if claims, ok := token.Claims.(*Claims); ok && token.Valid {
+		return claims, nil
+	}
+	return nil, jwt.ErrSignatureInvalid
 }

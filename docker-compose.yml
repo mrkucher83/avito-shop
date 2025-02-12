@@ -6,12 +6,12 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - DB_HOST=db
-      - DB_PORT=5432
-      - DB_USER=db_user
-      - DB_PASSWORD=pwd123
-      - DB_NAME=shop
-      - SERVER_PORT=8080
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - SERVER_PORT=${SERVER_PORT}
     depends_on:
       db:
         condition: service_healthy
@@ -22,10 +22,9 @@ services:
     image: "postgres:13"
     container_name: "postgres"
     environment:
-      - POSTGRES_USER=db_user
-      - POSTGRES_PASSWORD=pwd123
-      - POSTGRES_DB=shop
-#      - DATABASE_HOST=${DB_HOST}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
     ports:
       - "5432:5432"
     healthcheck:
@@ -35,7 +34,8 @@ services:
       retries: 5
       start_period: 10s
     volumes:
-      - /Users/alexanderkucher/shop/db/data:/var/lib/postgresql/data
+      - /Users/${MAC_OS_USER}/shop/db/data:/var/lib/postgresql/data  # Mac Os #
+#      - /home/${LINUX_USER}/shop/db/data:/var/lib/postgresql/data   # Linux #
     networks:
       - internal
 
