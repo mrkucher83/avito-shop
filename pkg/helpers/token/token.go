@@ -12,14 +12,16 @@ import (
 var jwtSecret = []byte(os.Getenv("AVITO_SECRET"))
 
 type Claims struct {
-	Username string `json:"username"`
+	Username   string `json:"username"`
+	EmployeeID int    `json:"employee_id"`
 	jwt.StandardClaims
 }
 
-func Generate(username string) (string, error) {
+func Generate(username string, employeeID int) (string, error) {
 	expirationTime := time.Now().Add(24 * time.Hour)
 	claims := &Claims{
-		Username: username,
+		Username:   username,
+		EmployeeID: employeeID,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expirationTime.Unix(),
 			Id:        uuid.New().String(),

@@ -26,7 +26,7 @@ func (rp *Repo) SignUp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req models.AuthRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	if err = json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
@@ -58,27 +58,27 @@ func (rp *Repo) SignUp(w http.ResponseWriter, r *http.Request) {
 		req.Password = hashedPassword
 
 		// Create employee in database
-		if err := rp.storage.CreateEmployee(r.Context(), req); err != nil {
+		if err = rp.storage.CreateEmployee(r.Context(), req); err != nil {
 			http.Error(w, "Error creating employee", http.StatusInternalServerError)
 			return
 		}
 	} else {
 		// Check password for existing employee
-		if err := hasher.CheckPasswordHash(req.Password, existingEmployee.Password); err != nil {
+		if err = hasher.CheckPasswordHash(req.Password, existingEmployee.Password); err != nil {
 			http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 			return
 		}
 	}
 
 	// Generate JWT token
-	tokenString, err := token.Generate(req.Username)
+	tokenString, err := token.Generate(req.Username, existingEmployee.ID)
 	if err != nil {
 		http.Error(w, "Error generating token", http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(models.AuthResponse{Token: tokenString}); err != nil {
+	if err = json.NewEncoder(w).Encode(models.AuthResponse{Token: tokenString}); err != nil {
 		http.Error(w, "Error encoding response: "+err.Error(), http.StatusInternalServerError)
 		return
 	}

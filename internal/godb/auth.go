@@ -16,10 +16,10 @@ func (i *Instance) CreateEmployee(ctx context.Context, empl models.AuthRequest) 
 	return nil
 }
 
-func (i *Instance) GetEmployee(ctx context.Context, username string) (*models.AuthRequest, error) {
-	query := `SELECT username, password FROM employee WHERE username=$1`
-	var user models.AuthRequest
-	err := i.Db.QueryRow(ctx, query, username).Scan(&user.Username, &user.Password)
+func (i *Instance) GetEmployee(ctx context.Context, username string) (*models.Employee, error) {
+	query := `SELECT id, username, password FROM employee WHERE username=$1`
+	var user models.Employee
+	err := i.Db.QueryRow(ctx, query, username).Scan(&user.ID, &user.Username, &user.Password)
 	if err != nil {
 		return nil, err
 	}
