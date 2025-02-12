@@ -3,8 +3,10 @@ package routes
 import (
 	"context"
 	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/middleware"
 	"github.com/mrkucher83/avito-shop/internal/godb"
 	"github.com/mrkucher83/avito-shop/internal/handlers"
+	"github.com/mrkucher83/avito-shop/internal/middlewares"
 	"github.com/mrkucher83/avito-shop/pkg/logger"
 	"net/http"
 	"os"
@@ -17,6 +19,7 @@ func Start(port string, repo *godb.Instance) {
 	handler := handlers.NewRepo(repo)
 
 	r := chi.NewRouter()
+	r.Use(middleware.Logger)
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		if _, err := w.Write([]byte("Welcome to Avito Shop!")); err != nil {
@@ -24,7 +27,15 @@ func Start(port string, repo *godb.Instance) {
 		}
 	})
 
-	r.Post("/api/auth", handler.SignUp)
+	r.Route("/api", func(r chi.Router) {
+		r.Post("/auth", handler.SignUp)
+
+		r.With(middlewares.AuthMiddleware).Group(func(r chi.Router) {
+			r.Get("/info", handler.GetEmployeeInfo)
+			r.Post("/sendCoin", handler.SendCoin)
+			r.Get("/buy/{item:[a-zA-Z-]+}", handler.BuyItem)
+		})
+	})
 
 	logger.Info("starting server on %s", port)
 	server := &http.Server{Addr: ":" + port, Handler: r}
