@@ -17,7 +17,7 @@ func (rp *Repo) SendCoin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Extract data from request body
-	var req models.SendCoinRequest
+	var req models.SendCoin
 	if err = json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return

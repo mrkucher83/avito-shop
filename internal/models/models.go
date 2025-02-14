@@ -1,6 +1,6 @@
 package models
 
-// Employee models -------------------------
+// Employee models ------------------------------------
 
 type AuthRequest struct {
 	Username string `json:"username"`
@@ -18,7 +18,7 @@ type AuthResponse struct {
 	Token string
 }
 
-// Purchase models -------------------------
+// Purchase models ------------------------------------
 
 type Merch struct {
 	ID    int    `json:"id"`
@@ -26,12 +26,49 @@ type Merch struct {
 	Price int    `json:"price"`
 }
 
-// SendCoin models -------------------------
+// Coins models -----------------------------------
 
-type SendCoinRequest struct {
+type SendCoin struct {
 	ToUser string `json:"toUser"`
 	Amount int    `json:"amount"`
 }
+
+type ReceiveCoin struct {
+	FromUser string `json:"fromUser"`
+	Amount   int    `json:"amount"`
+}
+
+// Get employee info models --------------------------
+
+type EmployeeInfoResponse struct {
+	Coins        int `json:"coins"`
+	Inventory    `json:"inventory"`
+	CoinsHistory `json:"coinsHistory"`
+}
+
+type Inventory struct {
+	Items []Purchase `json:"items"`
+}
+
+type Purchase struct {
+	Type     string `json:"type"`
+	Quantity int    `json:"quantity"`
+}
+
+type Received struct {
+	Items []ReceiveCoin `json:"items"`
+}
+
+type Sent struct {
+	Items []SendCoin `json:"items"`
+}
+
+type CoinsHistory struct {
+	Received `json:"received"`
+	Sent     `json:"sent"`
+}
+
+// Standard response message ------------------------
 
 type Response struct {
 	Message string `json:"message"`
