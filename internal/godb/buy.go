@@ -26,23 +26,6 @@ func (i *Instance) GetCoinsById(ctx context.Context, employeeID int) (int, error
 	return coins, nil
 }
 
-func (i *Instance) BeginTransaction(ctx context.Context) (pgx.Tx, error) {
-	tx, err := i.Db.BeginTx(ctx, pgx.TxOptions{})
-	if err != nil {
-		return nil, err
-	}
-	return tx, nil
-}
-
-func (i *Instance) UpdateBalance(ctx context.Context, tx pgx.Tx, price int, employeeID int) error {
-	query := `UPDATE employee SET coins = coins - $1 WHERE id = $2`
-	_, err := tx.Exec(ctx, query, price, employeeID)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func (i *Instance) RecordPurchase(ctx context.Context, tx pgx.Tx, employeeID, merchID, quantity int) error {
 	query := `INSERT INTO purchases (employee_id, merch_id, quantity) VALUES ($1, $2, $3)`
 	_, err := tx.Exec(ctx, query, employeeID, merchID, quantity)

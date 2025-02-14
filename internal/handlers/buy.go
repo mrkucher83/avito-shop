@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/go-chi/chi"
+	"github.com/mrkucher83/avito-shop/internal/godb"
 	"github.com/mrkucher83/avito-shop/internal/models"
 	"github.com/mrkucher83/avito-shop/pkg/helpers/token"
 	"net/http"
@@ -50,7 +51,14 @@ func (rp *Repo) BuyItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = rp.storage.UpdateBalance(r.Context(), tx, item.Price, employeeID); err != nil {
+	defer func() {
+		if err != nil {
+			godb.RollbackOnError(r.Context(), tx) // Откатываем, если commit не удался
+			http.Error(w, "Transaction failed, purchase not completed", http.StatusInternalServerError)
+		}
+	}()
+
+	if err = rp.storage.ReduceBalance(r.Context(), tx, item.Price, employeeID); err != nil {
 		http.Error(w, "Failed to update balance", http.StatusInternalServerError)
 		return
 	}
@@ -63,7 +71,6 @@ func (rp *Repo) BuyItem(w http.ResponseWriter, r *http.Request) {
 	// Transaction completion
 	err = tx.Commit(r.Context())
 	if err != nil {
-		tx.Rollback(r.Context()) // Откатываем, если commit не удался
 		http.Error(w, "Transaction commit failed", http.StatusInternalServerError)
 		return
 	}

@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/mrkucher83/avito-shop/internal/models"
 	"github.com/mrkucher83/avito-shop/pkg/helpers/hasher"
@@ -25,6 +27,7 @@ func (rp *Repo) SignUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Extract data from request body
 	var req models.AuthRequest
 	if err = json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
@@ -39,7 +42,7 @@ func (rp *Repo) SignUp(w http.ResponseWriter, r *http.Request) {
 	// Check if employee exists
 	existingEmployee, err := rp.storage.GetEmployee(r.Context(), req.Username)
 	if err != nil {
-		if err.Error() == "no rows in result set" {
+		if errors.Is(err, sql.ErrNoRows) {
 			existingEmployee = nil
 		} else {
 			http.Error(w, "Database error", http.StatusInternalServerError)

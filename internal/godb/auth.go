@@ -17,9 +17,9 @@ func (i *Instance) CreateEmployee(ctx context.Context, empl models.AuthRequest) 
 }
 
 func (i *Instance) GetEmployee(ctx context.Context, username string) (*models.Employee, error) {
-	query := `SELECT id, username, password FROM employee WHERE username=$1`
+	query := `SELECT id, username, password, coins FROM employee WHERE username=$1`
 	var user models.Employee
-	err := i.Db.QueryRow(ctx, query, username).Scan(&user.ID, &user.Username, &user.Password)
+	err := i.Db.QueryRow(ctx, query, username).Scan(&user.ID, &user.Username, &user.Password, &user.Coins)
 	if err != nil {
 		return nil, err
 	}
